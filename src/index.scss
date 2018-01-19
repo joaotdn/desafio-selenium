@@ -1,0 +1,17 @@
+@import 'globals';
+@include react-md-everything;
+
+body {
+    margin: 0;
+}
+
+.sexo {
+    margin: 0;
+    padding: 0;
+
+    legend {
+        margin: 0;
+        padding-left: 7px;
+        padding-top: 10px;
+    }
+}
