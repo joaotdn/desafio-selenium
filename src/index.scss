@@ -1,8 +1,19 @@
 @import 'globals';
 @include react-md-everything;
 
+html {
+    position: relative;
+}
+
+html, body {
+    height: 100%;
+}
+
 body {
     margin: 0;
+    background-image: url('http://conductor.com.br/Content/images/a-conductor/banner-conductor.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
 }
 
 .sexo {
