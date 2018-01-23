@@ -11,9 +11,11 @@ html, body {
 
 body {
     margin: 0;
-    background-image: url('http://conductor.com.br/Content/images/a-conductor/banner-conductor.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
+    background: #f1f1f1;
+}
+
+.App {
+    background: #f1f1f1;
 }
 
 .sexo {
@@ -26,3 +28,26 @@ body {
         padding-top: 10px;
     }
 }
+
+.md-dialog--centered {
+    .md-dialog {
+      max-height: auto;
+      max-width: auto;
+  
+      @media (max-device-width: 320px) {
+        // iphone 5 is 320x500 with toolbars included.
+  
+        max-height: 500px - 16px;
+        max-width: 320px - 16px;
+      }
+  
+      // and any other devices less than 340x530
+    }
+  
+    .md-overlay {
+      bottom: -50vh;
+      left: -50vw;
+      right: -50vw;
+      top: -50vh;
+    }
+  }

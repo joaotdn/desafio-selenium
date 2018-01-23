@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import serialize from 'form-serialize';
+import SubscriptionForm from './components/SubscriptionForm';
 import {
   Toolbar,
   Grid,
@@ -6,11 +8,6 @@ import {
   Card,
   CardTitle,
   CardText,
-  TextField,
-  SelectionControlGroup,
-  SelectField,
-  DatePicker,
-  Button,
   Avatar,
   DataTable,
   TableHeader,
@@ -19,7 +16,11 @@ import {
   TableColumn,
   FontIcon,
   MenuButton,
-  ListItem
+  ListItem,
+  DialogContainer,
+  Button,
+  Portal,
+  Snackbar 
 } from 'react-md';
 import update from 'react-addons-update';
 
@@ -27,56 +28,69 @@ class App extends Component {
   constructor() {
     super(...arguments);
     this.state={
-      cadastros: [],
-      nome: null,
-      sexo: null,
-      estadoCivil: null,
-      dataDeNascimento: null,
-      observacoes: null
+      visible: false,
+      toasts: [],
+      autohide: true,
+      cadastros: [
+        {
+          id: 1,
+          nome: 'João Teodooro',
+          sexo: 'masculino',
+          estadoCivil: 'Solteiro',
+          dataDeNascimento: '27/01/1986',
+          observacoes: 'Sustentação - Fábrica - JP'
+        }, {
+          id: 2,
+          nome: 'Alex Brenner',
+          sexo: 'masculino',
+          estadoCivil: 'Casado',
+          dataDeNascimento: '07/11/1989',
+          observacoes: 'CG'
+        }
+      ]
     }
 
-    this.handleNome = this.handleNome.bind(this);
+    this.show = () => { this.setState({ visible: true }) };
+    this.hide = () => { this.setState({ visible: false }) };
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleNome(e) {
-    this.setState({ nome: e });
-  }
+  addToast = (text, action, autohide = true) => {
+    this.setState((state) => {
+      const toasts = state.toasts.slice();
+      toasts.push({ text, action });
+      return { toasts, autohide };
+    });
+  };
 
-  handleSexo(e) {
-    this.setState({ sexo: e });
-  }
-
-  handleEstadoCivil(e) {
-    this.setState({ estadoCivil: e });
-  }
-
-  handleDataDeNasimento(e) {
-    this.setState({ dataDeNascimento: e });
-  }
-
-  handleObservacoes(e) {
-    this.setState({ observacoes: e });
-  }
+  dismissToast = () => {
+    const [, ...toasts] = this.state.toasts;
+    this.setState({ toasts });
+  };
 
   handleSubmit(e) {
     e.preventDefault();
-
-    let data={
-      nome: this.state.nome,
-      sexo: this.state.sexo,
-      estadoCivil: this.state.estadoCivil,
-      dataDeNascimento: this.state.dataDeNascimento,
-      observacoes: this.state.observacoes,      
-    };
-    this.setState({ cadastros: update(this.state.cadastros, { $push: [data] }) });
+    let form = document.querySelector('#formulario-cadastro');
+    let cadastro = serialize(form, { hash: true });
+    this.setState({ 
+      cadastros: update(this.state.cadastros, { $push: [cadastro] }),
+      visible: false
+    });
+    this.addToast('Cadastro adicionado!');
   }
 
   delete(e) {
     let item = this.state.cadastros.findIndex(item => item.nome==e);
     this.setState({ cadastros: update(this.state.cadastros, { $splice: [[item, 1]] }) });
+    this.addToast('Cadastro deletado!');
   }
   render() {
+    const { visible, toasts, autohide } = this.state;
+    const actions = [];
+
+    actions.push({ secondary: true, children: 'Cancelar', onClick: this.hide });
+    actions.push(<Button id="cadastrar" raised primary onClick={this.handleSubmit}>Cadastrar</Button>);
+
     return (
       <div className="App">
         <Toolbar
@@ -84,70 +98,8 @@ class App extends Component {
           zDepth={1}
           colored
         />
-
         <Grid>
-          <Cell desktopSize={4}>
-            <Card>
-              <CardTitle title="Formulário de cadastro" subtitle="Preencha os campos abaixo para realizar seu cadastro" />
-              <CardText>
-                <form id="formulario-cadastro" onSubmit={this.handleSubmit}>
-                  <TextField
-                    id="nome"
-                    label="Nome completo"
-                    lineDirection="center"
-                    className="md-cell md-cell--bottom md-cell--12"
-                    onChange={this.handleNome}
-                    required                    
-                  />
-                  <SelectionControlGroup
-                    id="sexo"
-                    name="radio-example"
-                    type="radio"
-                    label="Sexo"
-                    className="md-cell md-cell--bottom md-cell--12 sexo"
-                    defaultValue="masculino"
-                    value="masculino"
-                    inline
-                    onChange={this.handleSexo.bind(this)}
-                    controls={[{
-                      label: 'Masculino',
-                      value: 'masculino',
-                    }, {
-                      label: 'Feminino',
-                      value: 'feminino',
-                    }]}
-                    required                    
-                  />
-                  <SelectField
-                    id="estado-civil"
-                    onChange={this.handleEstadoCivil.bind(this)}
-                    placeholder="Estado civil"
-                    className="md-cell md-cell--12"
-                    menuItems={['Solteiro', 'Casado', 'Divorciado', 'Viúvo']}
-                    required                    
-                  />
-                  <DatePicker
-                    id="data-nascimento"
-                    onChange={this.handleDataDeNasimento.bind(this)}
-                    label="Data de nascimento"
-                    className="md-cell md-cell--bottom md-cell--12"
-                    required                    
-                  />
-                  <TextField
-                    id="observacoes"
-                    onChange={this.handleObservacoes.bind(this)}
-                    label="Observações"
-                    lineDirection="center"
-                    rows={10}
-                    className="md-cell md-cell--bottom md-cell--12"
-                    required
-                  />
-                  <Button id="cadastrar" raised primary type="submit">Cadastrar</Button>
-                </form>
-              </CardText>
-            </Card>
-          </Cell>
-          <Cell desktopSize={8}>
+          <Cell desktopSize={10} desktopOffset={1}>
             <Card>
               <CardTitle title="Lista de cadastros" />
               <CardText>
@@ -157,7 +109,6 @@ class App extends Component {
                       <TableColumn>Nome</TableColumn>
                       <TableColumn>Sexo</TableColumn>
                       <TableColumn>Estado civil</TableColumn>
-                      <TableColumn>Data de nascimento</TableColumn>
                       <TableColumn>Observações</TableColumn>
                       <TableColumn />
                     </TableRow>
@@ -168,7 +119,6 @@ class App extends Component {
                         <TableColumn>{c.nome}</TableColumn>
                         <TableColumn>{c.sexo}</TableColumn>
                         <TableColumn>{c.estadoCivil}</TableColumn>
-                        <TableColumn>{c.dataDeNascimento}</TableColumn>
                         <TableColumn>{c.observacoes}</TableColumn>
                         <TableColumn>
                           <MenuButton
@@ -201,6 +151,34 @@ class App extends Component {
             </Card>
           </Cell>
         </Grid>
+
+        <Button
+          id="adicionar"
+          floating
+          fixed
+          fixedPosition='br'
+          onClick={this.show}
+          primary>add</Button>
+
+        <DialogContainer
+          id="janela"
+          visible={visible}
+          onHide={this.hide}
+          title="Formulário de cadastro"
+          actions={actions}
+          width={400}
+        >
+          <form id="formulario-cadastro">
+            <SubscriptionForm />
+          </form>
+        </DialogContainer>
+        
+        <Snackbar
+          id="alertas"
+          toasts={toasts}
+          autohide={autohide}
+          onDismiss={this.dismissToast}
+        />
       </div>
     );
   }
